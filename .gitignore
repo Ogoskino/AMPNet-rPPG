@@ -1,0 +1,94 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# =========================
+# Virtual environments
+# =========================
+env/
+venv/
+.venv/
+rppg/
+ENV/
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editors
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# MLflow
+# =========================
+mlruns/
+mlartifacts/
+
+# =========================
+# Model outputs
+# =========================
+model_paths/
+*.pth
+*.pt
+
+# =========================
+# Generated plots / results
+# =========================
+plots/
+results/
+*.png
+*.jpg
+*.jpeg
+*.pdf
+
+# (optional: keep specific example images)
+#!plots/example.png
+#!figures/ampnet_architecture.png
+
+# =========================
+# Dataset (VERY IMPORTANT)
+# =========================
+data/
+*.npy
+*.npz
+*.h5
+*.mat
+*.csv
+
+# If you want to keep structure but not data:
+#!data/.gitkeep
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Config / secrets
+# =========================
+.env
+
+# =========================
+# Misc
+# =========================
+*.tmp
+*.bak
+*.swp
