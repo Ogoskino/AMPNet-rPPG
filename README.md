@@ -97,7 +97,7 @@ SAMPLING_RATE = 28
 ## ⚙️ Installation
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Ogoskino/AMPNet-rPPG.git
 cd rPPG-project-main
 conda create -n rppg python=3.9
 conda activate rppg
