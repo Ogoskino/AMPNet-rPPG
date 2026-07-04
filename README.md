@@ -150,15 +150,15 @@ Performance on the iBVP dataset. Lower MAE/RMSE is better, while higher r, SNR, 
 
 ### Model Architecture
 
-![Architecture](figures/ampnet_architecture.png)
+![Architecture](ampnet_architecture.png)
 
 ---
 
 ### Example Outputs
 
-![HR Plot](plots/hr_plot.png)
+![HR Plot](hr_plot.png)
 
-![BVP Signals](plots/bvp_signals.png)
+![BVP Signals](bvp_signals.png)
 
 ---
 
