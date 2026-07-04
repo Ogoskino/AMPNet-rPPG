@@ -136,13 +136,15 @@ python test.py
 
 ### Quantitative Results
 
+Performance on the iBVP dataset. Lower MAE/RMSE is better, while higher r, SNR, and MACC is better.
+
 | Model | MAE ↓ | RMSE ↓ | r ↑ | SNR ↑ | MACC ↑ |
-|------|------|--------|----|------|--------|
-| PhysNet | | | | | |
-| iBVPNet | | | | | |
-| RTrPPG | | | | | |
-| 3EDSAN | | | | | |
-| AMPNet | | | | | |
+|------|------:|-------:|----:|------:|-------:|
+| PhysNet | 2.717 | 5.957 | 0.716 | 7.433 | 0.624 |
+| iBVPNet | 3.264 | 6.438 | 0.643 | 5.522 | 0.555 |
+| RTrPPG | 2.666 | 5.877 | 0.734 | 5.680 | 0.504 |
+| 3EDSAN | 1.504 | 3.033 | 0.933 | 7.095 | 0.628 |
+| AMPNet | **1.248** | **2.458** | **0.958** | 7.098 | **0.696** |
 
 ---
 
