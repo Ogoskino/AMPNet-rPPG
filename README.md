@@ -190,12 +190,16 @@ Performance on the iBVP dataset. Lower MAE/RMSE is better, while higher r, SNR, 
 ## 📚 Citation
 
 ```bibtex
-@article{okafor2026ampnet,
-  title={AMPNet: An Attentive Multimodal Pulse Network for Equitable and Robust rPPG},
-  author={Okafor, Ogonna et al.},
-  journal={IEEE Sensors Journal},
-  year={2026}
-}
+@ARTICLE{11589532,
+  author={Okafor, Ogonna and Adama, David Ada and Dangana, Muhammad and Vinkemeier, Doratha},
+  journal={IEEE Sensors Journal}, 
+  title={AMPNet: An Attentive Multimodal Pulse Network for Equitable and Robust Remote Photoplethysmography (rPPG)}, 
+  year={2026},
+  volume={},
+  number={},
+  pages={1-1},
+  keywords={Modeling;Heart rate;Videos;Training;Estimation;Measurement;Skin;Modules (abstract algebra);Attention mechanisms;Signal to noise ratio;Blood Volume Pulse (BVP) estimation;Convolutional Block Attention Module (CBAM);Multimodal fusion;Remote photoplethysmography (rPPG);RGB–thermal imaging;Spatiotemporal attention;Temporal Attention Module (TAM)},
+  doi={10.1109/JSEN.2026.3706851}}
 ```
 
 ---
