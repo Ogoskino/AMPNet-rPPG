@@ -1,3 +1,4 @@
+from pathlib import Path
 import torch
 import torch.nn as nn
 
@@ -9,8 +10,8 @@ class AMPNet(nn.Module):
 
         # Define normalization layers (if required)
         if normalization:
-            self.rgb_norm = nn.LayerNorm(192)  # Assuming frames = 192
-            self.thermal_norm = nn.LayerNorm(192)  # Assuming frames = 192
+            self.rgb_norm = nn.LayerNorm(128)  # Released checkpoints use 128 frames.
+            self.thermal_norm = nn.LayerNorm(128)
         else:
             self.rgb_norm = self.thermal_norm = None
 
@@ -36,6 +37,8 @@ class AMPNet(nn.Module):
             thermal_outputs.append(thermal_output.unsqueeze(0))  # Add a new dimension for stacking
         avg_thermal_output = torch.mean(torch.cat(thermal_outputs, dim=0), dim=0)  # Average along the first dimension
 
+        avg_rgb_output_n = avg_rgb_output
+        avg_th_output = avg_thermal_output
         # Apply normalization if enabled
         if self.rgb_norm:
             avg_rgb_output_n = self.rgb_norm(avg_rgb_output)  # Normalize RGB output
@@ -57,14 +60,14 @@ def load_models(rgb_model, thermal_model, device):
     rgb_models = []
     thermal_models = []
 
-    rgb_model_path = 'model_paths/R3EDSAN.pth'
-    rgb_model = rgb_model
+    rgb_model_path = Path(__file__).resolve().parents[1] / 'model_paths/best_model_R3EDSAN-MSE_fold_1_ibvp_swise.pth'
+    rgb_model = rgb_model.to(device)
     rgb_model.load_state_dict(torch.load(rgb_model_path, weights_only=True, map_location=device))
     rgb_model.eval()
     rgb_models.append(rgb_model)
 
-    thermal_model_path = 'model_paths/T3EDSAN.pth'
-    thermal_model = thermal_model
+    thermal_model_path = Path(__file__).resolve().parents[1] / 'model_paths/best_model_T3EDSAN-CS_fold_4_ibvp_thermal_swise.pth'
+    thermal_model = thermal_model.to(device)
     thermal_model.load_state_dict(torch.load(thermal_model_path, weights_only=True, map_location=device))
     thermal_model.eval()
     thermal_models.append(thermal_model)

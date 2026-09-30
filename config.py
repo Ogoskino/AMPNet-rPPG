@@ -1,18 +1,21 @@
 """Central configuration for training and testing."""
 
 from pathlib import Path
+import os
 import torch
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-MLFLOW_TRACKING_URI = 'http://127.0.0.1:5000'
+PROJECT_ROOT = Path(__file__).resolve().parent
+DATA_ROOT = Path(os.environ.get('AMPNET_DATA_DIR', str(PROJECT_ROOT / 'datasets')))
+MLFLOW_TRACKING_URI = os.environ.get('MLFLOW_TRACKING_URI', (PROJECT_ROOT / 'mlruns').as_uri())
 MLFLOW_EXPERIMENT_NAME = 'sta_rppg'
 
-TRAIN_FEATURES_PATH = Path(r'C:\Users\n1071552\Desktop\rppg_data\ibvp_train_features.pth')
-TRAIN_LABELS_PATH = Path(r'C:\Users\n1071552\Desktop\rppg_data\ibvp_train_labels.pth')
-TEST_FEATURES_PATH = Path(r'C:\Users\n1071552\OneDrive - Nottingham Trent University\rppg_data_processed\ibvp_test_features.pth')
-TEST_LABELS_PATH = Path(r'C:\Users\n1071552\OneDrive - Nottingham Trent University\rppg_data_processed\ibvp_test_labels.pth')
-MODEL_DIR = Path('model_paths')
+TRAIN_FEATURES_PATH = DATA_ROOT / 'ibvp_train_features.pth'
+TRAIN_LABELS_PATH = DATA_ROOT / 'ibvp_train_labels.pth'
+TEST_FEATURES_PATH = DATA_ROOT / 'ibvp_test_features.pth'
+TEST_LABELS_PATH = DATA_ROOT / 'ibvp_test_labels.pth'
+MODEL_DIR = PROJECT_ROOT / 'model_paths'
 
 SEGMENT_LENGTH = 128
 SESSION_LENGTH = 1792

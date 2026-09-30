@@ -7,10 +7,13 @@ RTrPPG: An Ultra Light 3DCNN for Real-Time Remote Photoplethysmography
 D. Botina-Monsalve et al."""
 
 import torch.nn as nn
-from preprocessing.preprocess import device
+import torch
+
+# Model inference must not import face detection or experiment tracking.
+device = torch.device('cpu')
 
 class N3DED64(nn.Module):
-    def __init__(self, frames=192):  
+    def __init__(self, frames=128):
         super(N3DED64, self).__init__()
 
         self.Conv1 = nn.Sequential(

@@ -6,11 +6,14 @@ By Zitong Yu, 2019/05/05
 """
 
 import torch.nn as nn
-from preprocessing.preprocess import device
+import torch
+
+# Model inference must not import face detection or experiment tracking.
+device = torch.device('cpu')
 
 
 class PhysNet_padding_Encoder_Decoder_MAX(nn.Module):
-    def __init__(self, frames=192):
+    def __init__(self, frames=128):
         super(PhysNet_padding_Encoder_Decoder_MAX, self).__init__()
 
         self.ConvBlock1 = nn.Sequential(

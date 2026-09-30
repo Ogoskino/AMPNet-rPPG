@@ -5,7 +5,10 @@ Joshi, Jitesh, and Youngjun Cho. 2024. "iBVP Dataset: RGB-Thermal rPPG Dataset w
 """
 
 import torch.nn as nn
-from preprocessing.preprocess import device
+import torch
+
+# Model inference must not import face detection or experiment tracking.
+device = torch.device('cpu')
 
 class ConvBlock3D(nn.Module):
     def __init__(self, in_channel, out_channel, kernel_size, stride, padding):
@@ -99,7 +102,7 @@ class decoder_block(nn.Module):
 
 
 class iBVPNet(nn.Module):
-    def __init__(self, frames=192, in_channels=3, debug=False):
+    def __init__(self, frames=128, in_channels=3, debug=False):
         super(iBVPNet, self).__init__()
         self.debug = debug
         self.ibvpnet = nn.Sequential(
@@ -124,4 +127,4 @@ class iBVPNet(nn.Module):
 
 
 
-iBVP = iBVPNet(in_channels=3, frames=192, debug=True).to(device)
+iBVP = iBVPNet(in_channels=3, frames=128, debug=False).to(device)

@@ -45,9 +45,20 @@ mlartifacts/
 # =========================
 # Model outputs
 # =========================
-model_paths/
+/model_paths/*
 *.pth
 *.pt
+
+# Release checkpoints: allow only the selected, documented weights.
+!/model_paths/best_model_R3EDSAN-MSE_fold_1_ibvp_swise.pth
+!/model_paths/best_model_PhysNet_fold_4_ibvp_swise.pth
+!/model_paths/best_model_iBVPNet_fold_4_ibvp_swise.pth
+!/model_paths/best_model_RTrPPG-NP_fold_3_ibvp_swise.pth
+!/model_paths/best_model_T3ED_fold_4_ibvp_thermal_swise.pth
+!/model_paths/best_model_T3EDSAN-TAM_fold_2_ibvp_thermal_swise.pth
+!/model_paths/best_model_T3EDSAN-CBAM_fold_2_ibvp_thermal_swise.pth
+!/model_paths/best_model_T3EDSAN-CS_fold_4_ibvp_thermal_swise.pth
+!/model_paths/best_model_AMPNet_fold_1.pth
 
 # =========================
 # Generated plots / results
@@ -66,7 +77,12 @@ results/
 # =========================
 # Dataset (VERY IMPORTANT)
 # =========================
-data/
+datasets/
+/data/*
+# Keep the data package source, never dataset payloads or generated caches.
+!/data/__init__.py
+!/data/dataset.py
+!/data/loading.py
 *.npy
 *.npz
 *.h5

@@ -1,8 +1,20 @@
-mediapipe
+-r requirements-predict.txt
+
+# Training, evaluation, and experiment tracking.
 mlflow
-fastapi[standard]
-torch
+scipy
+scikit-learn
+matplotlib
 tabulate
-torchvision
 torchinfo
+
+# Dataset preprocessing and the included alternative architectures.
+mediapipe
+opencv-python
+pandas
+torchvision
+timm
+
+# Retained tracking-server dependency.
+fastapi[standard]
 

@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from preprocessing.preprocess import device
+import torch
+
+# Model inference must not import face detection or experiment tracking.
+device = torch.device('cpu')
 
 class temp_AM(nn.Module):
     def __init__(self, in_channels, reduction_ratio=16):
@@ -92,7 +95,7 @@ class VideoCBAM(nn.Module):
 
 # Define the 3EDSAN Model
 class EDSAN(nn.Module):
-    def __init__(self, frames=192, n_channels=3, model='RGB', is_cbam = True, is_tam = True):
+    def __init__(self, frames=128, n_channels=3, model='RGB', is_cbam = True, is_tam = True):
         super(EDSAN, self).__init__()
 
         self.model = model
@@ -110,7 +113,7 @@ class EDSAN(nn.Module):
             nn.ReLU(inplace=True),
         )
         self.ConvBlock4 = nn.Sequential(
-            nn.Conv3d(32, 64, kernel_size=5, stride=1, padding=2),  # spatio-temporal encoding
+            nn.Conv3d(32, 64, kernel_size=5, stride=1, padding=2, groups=4),  # compatible retained weights
             nn.BatchNorm3d(64),
             nn.ReLU(inplace=True),
         )
@@ -183,7 +186,7 @@ T_3EDSAN = EDSAN(n_channels=1, model='thermal').to(device)
 
 if __name__ == "__main__":
 
-    tensor1 = torch.rand(2, 4, 192, 128, 128)
+    tensor1 = torch.rand(1, 4, 128, 64, 64)
     result1 = R_3EDSAN(tensor1)
     print(result1.shape)
     result2 = T_3EDSAN(tensor1)

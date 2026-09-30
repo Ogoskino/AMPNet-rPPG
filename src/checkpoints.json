@@ -1,0 +1,129 @@
+{
+  "ampnet": {
+    "channels": 4,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_R3EDSAN-MSE_fold_1_ibvp_swise.pth",
+        "sha256": "fb82b7bac90e91ede550ade9f96ea8402f7dfc5bb579146c2f0dee41d4447e53",
+        "bytes": 710330
+      },
+      {
+        "filename": "best_model_T3EDSAN-CS_fold_4_ibvp_thermal_swise.pth",
+        "sha256": "0e7b7274f9fdf0a2f6e0619df155d809f59293f34e70fac8808854eae0fe9e28",
+        "bytes": 694694
+      },
+      {
+        "filename": "best_model_AMPNet_fold_1.pth",
+        "sha256": "0e0c148ac86eb0ddd5ea55cd05fbbaa9b29981a1f1277e9a0be6fc2f653564e4",
+        "bytes": 6580
+      }
+    ]
+  },
+  "r3edsan": {
+    "channels": 3,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_R3EDSAN-MSE_fold_1_ibvp_swise.pth",
+        "sha256": "fb82b7bac90e91ede550ade9f96ea8402f7dfc5bb579146c2f0dee41d4447e53",
+        "bytes": 710330
+      }
+    ]
+  },
+  "physnet": {
+    "channels": 3,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_PhysNet_fold_4_ibvp_swise.pth",
+        "sha256": "2b7a575fc0ab573c140085f4cdcea1cad63c25bac88206768244fa19bea25b3a",
+        "bytes": 3107984
+      }
+    ]
+  },
+  "ibvpnet": {
+    "channels": 3,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_iBVPNet_fold_4_ibvp_swise.pth",
+        "sha256": "f2974c4a844d3ae79dc567b5f3e89eac1ac4da9b3b69f95da84810051143b828",
+        "bytes": 5761502
+      }
+    ]
+  },
+  "rtrppg": {
+    "channels": 3,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_RTrPPG-NP_fold_3_ibvp_swise.pth",
+        "sha256": "f8db05a3712dc61421cbba2323a208e87f7e1e7cec81a5a46129154f669dc12b",
+        "bytes": 872994
+      }
+    ]
+  },
+  "t3ed": {
+    "channels": 1,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_T3ED_fold_4_ibvp_thermal_swise.pth",
+        "sha256": "bc074567fa958b469032132093ff099f69e80437af46ec89afa702d83e93844e",
+        "bytes": 693966
+      }
+    ]
+  },
+  "t3edsan-tam": {
+    "channels": 1,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_T3EDSAN-TAM_fold_2_ibvp_thermal_swise.pth",
+        "sha256": "310873ccdb9225696a24efccded4488c25dd23e5b75107c51f70abe33eaf567e",
+        "bytes": 694330
+      }
+    ]
+  },
+  "t3edsan-cbam": {
+    "channels": 1,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_T3EDSAN-CBAM_fold_2_ibvp_thermal_swise.pth",
+        "sha256": "9863f6d1057179100727a94e735df11bd355cac3a5576011a91c7aa1a480edc6",
+        "bytes": 694382
+      }
+    ]
+  },
+  "t3edsan-cs": {
+    "channels": 1,
+    "frames": 128,
+    "height": 64,
+    "width": 64,
+    "checkpoints": [
+      {
+        "filename": "best_model_T3EDSAN-CS_fold_4_ibvp_thermal_swise.pth",
+        "sha256": "0e7b7274f9fdf0a2f6e0619df155d809f59293f34e70fac8808854eae0fe9e28",
+        "bytes": 694694
+      }
+    ]
+  }
+}
