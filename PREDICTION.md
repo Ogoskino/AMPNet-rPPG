@@ -142,4 +142,4 @@ These values are **not class probabilities or beats per minute**. At 28 fps, one
 
 ## Scope of validation
 
-See [Release validation](README.md#release-validation) for the checks performed and their scope.
+See [Tests](README.md#tests) for the automated checks.

@@ -1,144 +1,183 @@
-# AMPNet: Attentive Multimodal Pulse Network for Robust & Fair rPPG
+# AMPNet
 
-Official implementation of **AMPNet**, a remote photoplethysmography (rPPG) model using RGB and thermal facial video. This release's prediction entry point runs bundled checkpoints on prepared face-crop tensors, without ground-truth labels or an MLflow server.
+Code and pretrained models for [AMPNet: An Attentive Multimodal Pulse Network for Equitable and Robust Remote Photoplethysmography (rPPG)](https://doi.org/10.1109/JSEN.2026.3706851), published in *IEEE Sensors Journal* (2026).
 
-See [PREDICTION.md](PREDICTION.md) for the full input/output contract and [RELEASE_NOTES.md](RELEASE_NOTES.md) for release scope and checkpoint caveats.
+Estimating pulse from facial video is sensitive to lighting, movement, and skin tone. AMPNet combines RGB and thermal facial recordings to study how these two sources of information can improve pulse estimation.
 
-## Quick start: predict a waveform
+## Method
 
-Use Python 3.10 or newer; Python 3.12 is recommended and was tested for this release. From the repository directory containing `predict.py`:
+AMPNet processes RGB and thermal face crops in separate 3D convolutional encoder–decoder networks. Channel, spatial, and temporal attention help each branch select useful features across the face and over time. Each branch estimates a pulse waveform. A learned fusion layer combines the normalized RGB and thermal predictions into the final rPPG waveform.
+
+![AMPNet architecture](ampnet_architecture.png)
+
+The repository includes the RGB and thermal branches, their attention variants, the fusion model, and the PhysNet, iBVPNet, and RTrPPG comparison models.
+
+## Results
+
+The following results are reported for iBVP. MAE and RMSE measure heart-rate error, while `r`, SNR, and MACC describe correlation and signal quality. Lower error and higher correlation, SNR, and MACC are better.
+
+| Model | MAE | RMSE | r | SNR | MACC |
+|---|---:|---:|---:|---:|---:|
+| PhysNet | 2.717 | 5.957 | 0.716 | **7.433** | 0.624 |
+| iBVPNet | 3.264 | 6.438 | 0.643 | 5.522 | 0.555 |
+| RTrPPG | 2.666 | 5.877 | 0.734 | 5.680 | 0.504 |
+| 3EDSAN | 1.504 | 3.033 | 0.933 | 7.095 | 0.628 |
+| AMPNet | **1.248** | **2.458** | **0.958** | 7.098 | **0.696** |
+
+<details>
+<summary>Example waveforms and heart-rate estimates</summary>
+
+![Predicted and reference pulse waveforms](bvp_signals.png)
+
+![Heart-rate estimates](hr_plot.png)
+
+</details>
+
+## Installation
+
+Python 3.12 is recommended. Prediction has been tested on Windows and Linux with PyTorch 2.6.0 and NumPy 1.26.4.
 
 ```bash
+git clone https://github.com/Ogoskino/AMPNet-rPPG.git
+cd AMPNet-rPPG
 python -m venv .venv
 ```
 
-Activate it with `.venv\Scripts\Activate.ps1` in PowerShell, or `source .venv/bin/activate` on Linux/macOS, then install the prediction dependencies:
+Activate the environment in Windows PowerShell with
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+or in Linux/macOS with
+
+```bash
+source .venv/bin/activate
+```
+
+Then install the prediction dependencies.
 
 ```bash
 python -m pip install -r requirements-predict.txt
-python predict.py --list-models
+```
+
+The trained weights are included in the repository.
+
+## Prediction
+
+A quick installation check runs AMPNet on randomly generated input and saves a waveform file.
+
+```bash
 python predict.py --model ampnet --demo --output demo_waveform.npz --device cpu
 ```
 
-The demo uses random tensors: it is an execution smoke test, not a physiological example or an accuracy test. Bundled checkpoints require no additional download.
+### Prepare the input
 
-For real, already prepared crops:
+For prediction on your own recordings, first crop and resize the faces to 64 × 64 pixels, normalize the values to `[0, 1]`, and divide each recording into 128-frame segments. RGB and thermal crops should show the same face over the same time interval. These preparation steps take place before running `predict.py`.
+
+The input shape is `(N, C, 128, 64, 64)`, where `N` is the number of segments and `C` is the number of channels.
+
+| Input | Model names for `--model` | Channels |
+|---|---|---:|
+| RGB and thermal | `ampnet` | 4, ordered R, G, B, thermal |
+| RGB | `r3edsan`, `physnet`, `ibvpnet`, `rtrppg` | 3, ordered R, G, B |
+| Thermal | `t3ed`, `t3edsan-tam`, `t3edsan-cbam`, `t3edsan-cs` | 1 |
+
+Save the normalized, floating-point array as a `.npy` file, a `.npz` file under the key `frames`, or a plain PyTorch tensor in a `.pt` or `.pth` file. [The prediction guide](PREDICTION.md) explains data preparation and gives examples for each modality.
+
+### Run the model
 
 ```bash
-python predict.py --model ampnet --input crops.npz --output predicted_waveform.npz --device auto --batch-size 1 --fps 28
+python predict.py --model ampnet --input crops.npz --output prediction.npz --device cpu --fps 28
 ```
 
-Existing output files are protected; add `--overwrite` only when replacement is intended. Input and output paths are relative to your working directory, while bundled checkpoint paths are resolved relative to the code. You can invoke `predict.py` by its full path from another directory.
+Use `--device auto` to use a CUDA GPU when available. The `--fps` value records the input frame rate; it does not resample the video. Add `--overwrite` when intentionally replacing an existing output.
 
-For a GitHub clone, the usual commands are `git clone https://github.com/Ogoskino/AMPNet-rPPG.git` and `cd AMPNet-rPPG`; the checkout must contain this release's `predict.py`.
+The output contains one 128-sample waveform per input segment. AMPNet also saves the separate RGB and thermal predictions.
 
-## What the predictor accepts and returns
+```python
+import numpy as np
 
-Input is a finite floating-point tensor normalized to `[0, 1]`, shaped **`(N, C, 128, 64, 64)`**: independent windows, channels, time, height, width. Inputs are converted to float32; normalization is not automatic.
+with np.load("prediction.npz", allow_pickle=False) as result:
+    fused = result["waveform"]
+    rgb = result["rgb_waveform"]
+    thermal = result["thermal_waveform"]
 
-| Model key | Channels | Input |
-|---|---:|---|
-| `ampnet` | 4 | RGB channels followed by one synchronized thermal channel |
-| `r3edsan`, `physnet`, `ibvpnet`, `rtrppg` | 3 | RGB face crops, in RGB channel order |
-| `t3ed`, `t3edsan-tam`, `t3edsan-cbam`, `t3edsan-cs` | 1 | Thermal face crops |
+print(fused.shape)  # (N, 128)
+```
 
-Supported containers are `.npy`, `.npz` with a `frames` array, and `.pt`/`.pth` containing a plain tensor. This is **not a raw MP4/webcam predictor**: face detection, cropping, alignment, synchronization, resizing, normalization, and segmentation must happen beforehand.
+These are pulse waveforms. Heart-rate estimation is handled separately by the signal-processing and evaluation code. Pretrained weights are selected automatically through [src/checkpoints.json](src/checkpoints.json).
 
-The output `.npz` contains `waveform` shaped `(N, 128)` and a `metadata_json` string. AMPNet also returns `rgb_waveform` and `thermal_waveform`. These are predicted **rPPG waveforms**, not probabilities, diagnoses, or heart-rate values. `--fps` records metadata only; it does not resample the input. Meaningful heart-rate estimation requires suitable recording duration and separate signal processing.
+## Training and evaluation
 
-## Checkpoints
+Training requires prepared facial recordings and their reference pulse waveforms. Install the additional dependencies first.
 
-[src/checkpoints.json](src/checkpoints.json) declares the prediction models, channel counts, checkpoint filenames, and SHA-256 hashes. The CLI uses these compatible 128-frame retained weights; no retraining is performed. Older, legacy-named 192-frame checkpoints are not interchangeable with this interface. Do not choose weights by filename resemblance alone.
+```bash
+python -m pip install -r requirements.txt
+```
 
-## Project structure
+Create a `datasets/` directory and place the saved PyTorch tensors in it.
 
 ```text
-predict.py                Tensor-to-waveform prediction CLI
-requirements-predict.txt  Minimal prediction dependencies
-PREDICTION.md              Input/output details and examples
-model_paths/              Bundled trained checkpoints
-src/                      Architectures and checkpoint manifest
-train.py, test.py         Legacy dataset training/evaluation entry points
-config.py                 Legacy experiment configuration
-preprocessing/            Historical dataset preprocessing
-evaluation/, signals/     Metrics and signal-processing utilities
+datasets/
+├── ibvp_train_features.pth
+├── ibvp_train_labels.pth
+├── ibvp_test_features.pth
+└── ibvp_test_labels.pth
 ```
 
-## Training and dataset evaluation
+Alternatively, set `AMPNET_DATA_DIR` to the directory containing these files.
 
-Prediction does not require labels. The `train.py` and `test.py` workflows do: they expect prepared feature and waveform-label tensors, appropriate dataset ordering, and experiment-specific configuration.
+The training and evaluation loader expects whole recordings with shape `(N, T, 64, 64, C)` and reference waveforms with shape `(N, T)`. It splits the recordings into 128-frame segments and moves the channel dimension into the order required by the models. This is different from `predict.py`, which accepts segments that have already been prepared.
 
-Before using those workflows:
+Review [config.py](config.py) before running an experiment. The iBVP settings use 28 frames/s and 1,792 frames per recording, giving 14 segments. `MODALITY` selects RGB, thermal, or multimodal training. In multimodal mode, the fusion model is trained using the supplied RGB and thermal branch weights.
 
-- Install the broader dependencies in `requirements.txt` and inspect the dataset loader's format requirements.
-- Put `ibvp_train_features.pth`, `ibvp_train_labels.pth`, `ibvp_test_features.pth`, and `ibvp_test_labels.pth` under the repository's `datasets/` directory, or set `AMPNET_DATA_DIR` to your prepared-data directory.
-- Confirm model names, checkpoint filenames, modality, split construction, sampling rate, and full-session length for your dataset.
-- MLflow defaults to the repository's local `mlruns/` directory; no tracking server is required. Set `MLFLOW_TRACKING_URI` only if you want a different backend.
-
-For training/evaluation, the loader reads channels-last session tensors `(N, T, 64, 64, C)` and labels `(N, T)`, then splits and transposes them into model inputs `(segments, C, 128, 64, 64)`. This differs from the ready-segment input accepted by `predict.py`. The historical iBVP configuration uses `SESSION_LENGTH = 1792`, `SEGMENT_LENGTH = 128`, and `SAMPLING_RATE = 28`, giving 14 segments per session. Session reconstruction requires correct chronological order and session boundaries. These settings are dataset-specific.
-
-Only after those prerequisites are satisfied:
+Keep segments from each recording together and in chronological order for session-level evaluation. The demographic evaluation also expects recordings to be arranged in the groups defined in `config.py`; it does not read demographic labels automatically.
 
 ```bash
 python train.py
 python test.py
 ```
 
-## Paper and results
+Training logs are saved to `mlruns/`. A separate MLflow server is optional and can be selected through `MLFLOW_TRACKING_URI`.
 
-**AMPNet: An Attentive Multimodal Pulse Network for Equitable and Robust Remote Photoplethysmography (rPPG)**, IEEE Sensors Journal, 2026. DOI: `10.1109/JSEN.2026.3706851`.
+## Repository structure
 
-AMPNet combines RGB and thermal modalities, a 3D CNN encoder-decoder, spatiotemporal attention, and decision-level fusion to address illumination, motion, and skin-tone variability. The table and figures below present the project's existing reported results.
+```text
+AMPNet-rPPG/
+├── predict.py             Pretrained model prediction
+├── train.py               Model training
+├── test.py                Dataset evaluation
+├── config.py              Data paths and experiment settings
+├── data/                  Tensor loading and segmentation
+├── src/                   Model definitions and prediction utilities
+├── model_paths/           Trained weights
+├── preprocessing/         Face-video preprocessing
+├── evaluation/            Losses, metrics, and robustness experiments
+├── signals/               Signal-processing utilities
+├── utils/                 Data splitting and model helpers
+└── tests/                 Automated software tests
+```
 
-### Reported iBVP results
+## Tests
 
-Lower MAE/RMSE is better; higher correlation (`r`), SNR, and MACC is better.
-
-| Model | MAE | RMSE | r | SNR | MACC |
-|---|---:|---:|---:|---:|---:|
-| PhysNet | 2.717 | 5.957 | 0.716 | 7.433 | 0.624 |
-| iBVPNet | 3.264 | 6.438 | 0.643 | 5.522 | 0.555 |
-| RTrPPG | 2.666 | 5.877 | 0.734 | 5.680 | 0.504 |
-| 3EDSAN | 1.504 | 3.033 | 0.933 | 7.095 | 0.628 |
-| AMPNet | 1.248 | 2.458 | 0.958 | 7.098 | 0.696 |
-
-### Architecture and example outputs
-
-![AMPNet architecture](ampnet_architecture.png)
-
-![Heart-rate example](hr_plot.png)
-
-![BVP waveform examples](bvp_signals.png)
-
-The work evaluates demographic robustness and resolution/temporal perturbations. Cross-dataset validation, thermal noise, temporal sensitivity, and real-time deployment remain directions for further work.
-
-## Release validation
-
-Validation passed with Python 3.12.7, PyTorch 2.6.0+cpu, and NumPy 1.26.4: 17 unit tests and two pretrained smoke tests covering all nine models, finite waveforms, and repeatable AMPNet inference. On fixed-seed, two-window synthetic batches, all nine released models exactly matched the corresponding local implementations with the selected retained weights (maximum absolute difference 0, including all three AMPNet outputs).
+The automated checks cover input validation, checkpoint loading, and prediction for all nine models. They use synthetic inputs to test the software rather than reproduce the paper's accuracy results.
 
 ```bash
 python -m unittest discover -s tests -p "test_*.py" -v
 python tests/smoke_pretrained.py
 ```
 
-These are software/checkpoint checks, not a new dataset-accuracy evaluation; the reported paper results above are retained unchanged. Complete training reproduction is outside this release's validation scope.
+[View the Windows and Linux test results](https://github.com/Ogoskino/AMPNet-rPPG/actions/workflows/prediction.yml).
 
 ## Citation
 
 ```bibtex
-@ARTICLE{11589532,
-  author={Okafor, Ogonna and Adama, David Ada and Dangana, Muhammad and Vinkemeier, Doratha},
-  journal={IEEE Sensors Journal},
-  title={AMPNet: An Attentive Multimodal Pulse Network for Equitable and Robust Remote Photoplethysmography (rPPG)},
-  year={2026},
-  volume={},
-  number={},
-  pages={1-1},
-  keywords={Modeling;Heart rate;Videos;Training;Estimation;Measurement;Skin;Modules (abstract algebra);Attention mechanisms;Signal to noise ratio;Blood Volume Pulse (BVP) estimation;Convolutional Block Attention Module (CBAM);Multimodal fusion;Remote photoplethysmography (rPPG);RGB-thermal imaging;Spatiotemporal attention;Temporal Attention Module (TAM)},
-  doi={10.1109/JSEN.2026.3706851}
+@article{okafor2026ampnet,
+  author  = {Okafor, Ogonna and Adama, David Ada and Dangana, Muhammad and Vinkemeier, Doratha},
+  title   = {{AMPNet}: An Attentive Multimodal Pulse Network for Equitable and Robust Remote Photoplethysmography ({rPPG})},
+  journal = {IEEE Sensors Journal},
+  year    = {2026},
+  doi     = {10.1109/JSEN.2026.3706851}
 }
 ```
-
-## Author
-
-Ogonna Okafor, Nottingham Trent University.
