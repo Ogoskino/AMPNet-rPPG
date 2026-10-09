@@ -200,7 +200,7 @@ class BootstrapRoutingTests(unittest.TestCase):
                 self.assertEqual(prep.standalone_bootstrap(args), 7)
             install.assert_not_called()
             command = run.call_args.args[0]
-            self.assertEqual(command[:3], [str(executable), '-I', str(Path(prep.__file__).resolve())])
+            self.assertEqual(command[:3], [str(executable.resolve()), '-I', str(Path(prep.__file__).resolve())])
             self.assertEqual(command[3:], ['--input-dir', 'raw data', '--output-dir', 'processed data',
                                           '--sessions', 'p22_a', '--env-dir', str(target.resolve())])
 
