@@ -1,0 +1,5 @@
+# Tested on Python 3.12; CPU execution is sufficient.
+numpy==1.26.4
+torch==2.6.0
+opencv-contrib-python==4.11.0.86
+mediapipe==0.10.32

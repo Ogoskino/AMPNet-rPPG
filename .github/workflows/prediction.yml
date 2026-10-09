@@ -1,4 +1,4 @@
-name: Prediction checks
+name: Software checks
 
 on: [push, pull_request]
 
@@ -21,3 +21,33 @@ jobs:
       - run: python -B -m unittest discover -s tests -p test_prediction.py -v
       - run: python -B tests/smoke_pretrained.py
       - run: python -B predict.py --demo --output demo_waveform.npz
+
+  preprocessing:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      OMP_NUM_THREADS: "2"
+      MKL_THREADING_LAYER: SEQUENTIAL
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check standalone help
+        run: python -B prepare_ibvp.py --help
+      - name: Install preprocessing dependencies and face detector
+        run: python -B prepare_ibvp.py --setup
+      - name: Test preprocessing
+        shell: python
+        run: |
+          import os
+          import subprocess
+          from pathlib import Path
+
+          python = Path(".ibvp-venv") / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+          subprocess.run([
+              str(python.resolve()), "-B", "-m", "unittest", "discover",
+              "-s", "tests", "-p", "test_prepare_ibvp*.py", "-v",
+          ], check=True)

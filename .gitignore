@@ -78,6 +78,8 @@ results/
 # Dataset (VERY IMPORTANT)
 # =========================
 datasets/
+datasets_prepared/
+ibvp_verification/
 /data/*
 # Keep the data package source, never dataset payloads or generated caches.
 !/data/__init__.py
@@ -108,3 +110,6 @@ datasets/
 *.tmp
 *.bak
 *.swp
+
+# Standalone preprocessing environment
+.ibvp-venv/

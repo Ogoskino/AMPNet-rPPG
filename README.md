@@ -108,29 +108,53 @@ print(fused.shape)  # (N, 128)
 
 These are pulse waveforms. Heart-rate estimation is handled separately by the signal-processing and evaluation code. Pretrained weights are selected automatically through [src/checkpoints.json](src/checkpoints.json).
 
+## Preparing iBVP
+
+[prepare_ibvp.py](prepare_ibvp.py) converts raw iBVP recordings into AMPNet's training and evaluation tensors. It runs independently of the rest of the repository and requires 64-bit Python 3.12. Setup installs its dependencies in a separate environment and downloads the face detector; later runs use that environment automatically.
+
+From this directory, run the following commands, replacing the dataset path with your own:
+
+```powershell
+python prepare_ibvp.py --setup
+python prepare_ibvp.py --input-dir "C:\data\iBVP_Dataset" --output-dir "datasets_prepared"
+python prepare_ibvp.py --output-dir "datasets_prepared" --verify-only
+```
+
+The converter reads ZIP archives or extracted frame folders. By default, it retains 5,376 frames per recording as three rows of 1,792 frames, which the AMPNet loader divides into 42 clips of 128 frames. The [preprocessing guide](PREPROCESSING.md) explains the participant split, alignment and normalization choices, storage requirements, and validation results. Read it before preparing an experiment: some details are unspecified in the paper, and the released converter makes those choices explicit.
+
 ## Training and evaluation
 
-Training requires prepared facial recordings and their reference pulse waveforms. Install the additional dependencies first.
+Training requires prepared facial recordings and their reference pulse waveforms. Install the additional dependencies in your training environment:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Create a `datasets/` directory and place the saved PyTorch tensors in it.
+Set `AMPNET_DATA_DIR` to the converter's output directory, or place prepared tensors in `datasets/`:
 
 ```text
 datasets/
-├── ibvp_train_features.pth
-├── ibvp_train_labels.pth
-├── ibvp_test_features.pth
-└── ibvp_test_labels.pth
+    ibvp_train_features.pth
+    ibvp_train_labels.pth
+    ibvp_test_features.pth
+    ibvp_test_labels.pth
 ```
 
-Alternatively, set `AMPNET_DATA_DIR` to the directory containing these files.
+For example, in Windows PowerShell:
 
-The training and evaluation loader expects whole recordings with shape `(N, T, 64, 64, C)` and reference waveforms with shape `(N, T)`. It splits the recordings into 128-frame segments and moves the channel dimension into the order required by the models. This is different from `predict.py`, which accepts segments that have already been prepared.
+```powershell
+$env:AMPNET_DATA_DIR = (Resolve-Path "datasets_prepared").Path
+```
 
-Review [config.py](config.py) before running an experiment. The iBVP settings use 28 frames/s and 1,792 frames per recording, giving 14 segments. `MODALITY` selects RGB, thermal, or multimodal training. In multimodal mode, the fusion model is trained using the supplied RGB and thermal branch weights.
+On Linux or macOS:
+
+```bash
+export AMPNET_DATA_DIR="$PWD/datasets_prepared"
+```
+
+The training and evaluation loader expects chronological recording rows with shape `(N, T, 64, 64, C)` and reference waveforms with shape `(N, T)`. It splits the recordings into 128-frame segments and moves the channel dimension into the order required by the models. This is different from `predict.py`, which accepts segments that have already been prepared.
+
+Review [config.py](config.py) before running an experiment. The iBVP settings use a 28-Hz analysis rate and 1,792 frames per stored row, giving 14 segments per row. The analysis-rate setting does not perform temporal resampling. `MODALITY` selects RGB, thermal, or multimodal training. In multimodal mode, the fusion model is trained using the supplied RGB and thermal branch weights.
 
 Keep segments from each recording together and in chronological order for session-level evaluation. The demographic evaluation also expects recordings to be arranged in the groups defined in `config.py`; it does not read demographic labels automatically.
 
@@ -146,6 +170,8 @@ Training logs are saved to `mlruns/`. A separate MLflow server is optional and c
 ```text
 AMPNet-rPPG/
 ├── predict.py             Pretrained model prediction
+├── prepare_ibvp.py        Standalone iBVP data preparation
+├── PREPROCESSING.md       Setup, conversion and verification guide
 ├── train.py               Model training
 ├── test.py                Dataset evaluation
 ├── config.py              Data paths and experiment settings
@@ -161,11 +187,25 @@ AMPNet-rPPG/
 
 ## Tests
 
-The automated checks cover input validation, checkpoint loading, and prediction for all nine models. They use synthetic inputs to test the software rather than reproduce the paper's accuracy results.
+The automated checks cover prediction for all nine models, preprocessing, and dependency setup. Synthetic inputs exercise the software; measured checks on raw iBVP recordings are described in the [preprocessing guide](PREPROCESSING.md).
+
+Run prediction checks in the prediction environment:
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py" -v
+python -m unittest discover -s tests -p "test_prediction.py" -v
 python tests/smoke_pretrained.py
+```
+
+After preprocessing setup, run its tests with the managed environment. In Windows PowerShell:
+
+```powershell
+.ibvp-venv\Scripts\python.exe -m unittest discover -s tests -p "test_prepare_ibvp*.py" -v
+```
+
+On Linux or macOS:
+
+```bash
+.ibvp-venv/bin/python -m unittest discover -s tests -p 'test_prepare_ibvp*.py' -v
 ```
 
 [View the Windows and Linux test results](https://github.com/Ogoskino/AMPNet-rPPG/actions/workflows/prediction.yml).
